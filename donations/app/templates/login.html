@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            margin-top: 0;
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        input[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            background-color: #4267B2;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        input[type="submit"]:hover {
+            background-color: #39518F;
+        }
+        .error-message {
+            color: red;
+            margin-top: 10px;
+            text-align: center;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Login</h2>
+    <form id="loginForm" method="post">
+            {% csrf_token %}
+
+        <label for="email">Email:</label>
+        <input type="text" id="email" name="email" required>
+
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+
+        <input type="submit" value="Login">
+
+        <div id="errorMessage" class="error-message"></div> <!-- Add this line -->
+    </form>
+</div>
+<script>
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            // Get the values from the form
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            // Construct the GraphQL mutation
+            const mutation = `
+                mutation {
+                    tokenAuth(password: "${password}", email: "${email}") {
+                        token
+                        success
+                        errors
+                        user {
+                            id
+                            lastLogin
+                            username
+                            firstName
+                            lastName
+                            email
+                            isStaff
+                            isActive
+                            dateJoined
+                            pk
+                            archived
+                            verified
+                            secondaryEmail
+                        }
+                        unarchiving
+                        refreshToken
+                    }
+                }
+            `;
+
+            // Send a POST request to your GraphQL endpoint with the mutation
+            fetch('/graphql', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ query: mutation }),
+            })
+            .then(response => response.json())
+        .then(data => {
+            if (data.errors && data.errors.nonFieldErrors && data.errors.nonFieldErrors.length > 0) {
+                // Display the error message
+                document.getElementById('errorMessage').innerHTML = data.errors.nonFieldErrors[0].message;
+          } if (data.data.tokenAuth.success) {
+                // Redirect to the home page
+                    localStorage.setItem('authToken', data.data.tokenAuth.token);
+                window.location.href = "/dashboard";
+          } else {
+          document.getElementById('errorMessage').innerHTML = '';
+                // Handle the success response data here
+                console.log(data);
+            }
+        })
+        .catch(error => {
+            // Handle any errors here
+            console.error('Error:', error);
+        });
+        });
+
+    // Function to get CSRF token from cookie
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+    </script>
+</body>
+</html>

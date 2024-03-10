@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donation Records</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/donationrecord.css' %}">
+    <style>
+        /* CSS for positioning the back button */
+        .back-button {
+            position: absolute;
+            top: 10px; /* Adjust this value to position vertically */
+            right: 10px; /* Adjust this value to position horizontally */
+            color: white;
+            background-color: #333;
+            padding: 8px 16px;
+            border-radius: 5px;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<nav>
+    <div class="navbar">
+        <h1>Donor's List</h1>
+        <div class="navbar-right">
+            <a href="{% url 'index' %}" class="back-button">Back to Home</a>
+        </div>
+    </div>
+</nav>
+
+<body>
+    <h1>Donation Records</h1>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Donor</th>
+                <th>Blood Bank</th>
+                <th>Donation Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in donation_records %}
+                <tr>
+                    <td>{{ record.donor.donor_name }}</td>
+                    <td>{{ record.bloodbank.bloodbank_name }}</td>
+                    <td>{{ record.donation_date }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

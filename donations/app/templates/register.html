@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            margin-top: 0;
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        input[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            background-color: #4267B2;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        input[type="submit"]:hover {
+            background-color: #39518F;
+        }
+        .terms {
+            margin-top: 10px;
+            font-size: 12px;
+        }
+        .terms input[type="checkbox"] {
+            margin-right: 5px;
+        }
+        .terms label {
+            display: inline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Sign Up</h2>
+        <form id="registrationForm" method="post">
+            {% csrf_token %}
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
+
+            <label for="password1">Password:</label>
+            <input type="password" id="password1" name="password1" required>
+
+            <label for="password2">Confirm Password:</label>
+            <input type="password" id="password2" name="password2" required>
+
+            <input type="submit" value="Sign Up">
+        </form>
+        <div class="terms">
+            <input type="checkbox" id="agree" name="agree" required>
+            <label for="agree">I agree to the <a href="#">terms and conditions</a></label>
+        </div>
+    </div>
+    <script>
+document.getElementById('registrationForm').addEventListener('submit', function(event) {
+  event.preventDefault(); // Prevent the default form submission
+
+  // Get form data
+  const formData = new FormData(this);
+  const email = formData.get('email');
+  const username = formData.get('username');
+  const password1 = formData.get('password1'); // Corrected field name
+  const password2 = formData.get('password2'); // Corrected field name
+
+  // Create the GraphQL mutation payload
+  const mutation = `mutation {
+      register(
+          email: "${email}"
+          username: "${username}"
+          password1: "${password1}"
+          password2: "${password2}"
+      ) {
+          success
+          errors
+          refreshToken
+          token
+      }
+  }`;
+
+  // Send the GraphQL mutation request
+  fetch('/graphql', {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken') // Include CSRF token if required
+      },
+      body: JSON.stringify({ query: mutation })
+  })
+  .then(response => response.json())
+  .then(data => {
+      // Handle response data here
+      if (data.data && data.data.register.success) {
+          // Redirect to verification path on success
+          window.location.href =  "{% url 'verify' %}";
+      } else {
+          console.error('Registration failed:', data.errors);
+          // Handle registration errors here (display to user)
+      }
+  })
+  .catch(error => {
+      // Handle errors here
+      console.error('Error:', error);
+  });
+});
+
+
+// Function to get CSRF token from cookie
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+</script>
+</body>
+</html>

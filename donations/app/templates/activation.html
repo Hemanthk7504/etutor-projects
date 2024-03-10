@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Verifying Account</title>
+</head>
+<body>
+<h1>Verifying your account...</h1>
+<div id="errorMessage" style="color: red;"></div>
+<script>
+    const token = getParameterByName('token');
+    const mutation = 'mutation {
+                verifyAccount(token: "${token}") {
+                    success
+                    errors
+                }
+            }`
+
+    fetch('/graphql', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken') // Include CSRF token if required
+        },
+      body: JSON.stringify({ query: mutation })
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.data && data.data.verifyAccount.success) {
+            // Redirect to login page on success
+            window.location.href = "{% url 'login' %}";
+        } else {
+            // Display error message in template
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = data.data.verifyAccount.errors.join(', ');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+
+    function getParameterByName(name) {
+        name = name.replace(/[\[\]]/g, '\\$&');
+        var regex = new RegExp('[?&]' + name + '=([^&#]*)'),
+            results = regex.exec(location.search);
+        if (!results) return null;
+        return decodeURIComponent(results[1].replace(/\+/g, ' '));
+    }
+</script>
+</body>
+</html>
